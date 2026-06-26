@@ -1,0 +1,37 @@
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 虚拟环境
+.vene/
+venv/
+.venv/
+mywork/
+
+# 运行时生成的本地数据库（zhongyi_kb 是训练好的知识库，保留）
+chroma_db/
+app/chroma_db/
+
+# 本地遗留的模型文件夹（改为运行时挂载，不打包进镜像）
+app/bge-large-zh-v1.5/
+models/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# 日志
+*.log
+
+# 前端文件（不应打入后端镜像）
+project.config.json
+project.private.config.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
