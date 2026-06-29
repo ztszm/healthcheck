@@ -1,5 +1,5 @@
 {
-    "miniprogramRoot": "dist/",
+    "miniprogramRoot": "./dist",
     "projectname": "health-app-taro",
     "description": "慢病健康指导",
     "appid": "wxbb3bd95eb813f518",
