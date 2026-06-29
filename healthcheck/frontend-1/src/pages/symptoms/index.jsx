@@ -1,11 +1,33 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, Textarea } from '@tarojs/components'
-import Taro, { useRouter } from '@tarojs/taro'
+import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import { getSymptoms, generateReport } from '../../utils/api'
 
 export default function Symptoms() {
   const router = useRouter()
   const { diseaseId, diseaseName, diseaseIcon } = router.params
+
+  useDidShow(function () {
+    var page = Taro.getCurrentInstance().page
+    if (page) {
+      page.onShareAppMessage = function () {
+        return {
+          title: decodeURIComponent(diseaseName || '') + ' ' + (decodeURIComponent(diseaseIcon || '')) + ' - 慢病健康指导',
+          path: '/pages/symptoms/index?diseaseId=' + diseaseId + '&diseaseName=' + encodeURIComponent(diseaseName || '') + '&diseaseIcon=' + encodeURIComponent(diseaseIcon || '')
+        }
+      }
+      page.onShareTimeline = function () {
+        return {
+          title: decodeURIComponent(diseaseName || '') + '健康评估 - 慢病健康指导',
+          query: 'diseaseId=' + diseaseId + '&diseaseName=' + diseaseName + '&diseaseIcon=' + diseaseIcon
+        }
+      }
+    }
+    Taro.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    })
+  })
 
   const [symptoms, setSymptoms] = useState([])
   const [chosen, setChosen] = useState([])

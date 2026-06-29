@@ -1,8 +1,31 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 
 export default function Index() {
+  useDidShow(function () {
+    var page = Taro.getCurrentInstance().page
+    if (page) {
+      page.onShareAppMessage = function () {
+        return {
+          title: '慢病健康指导 - 选择疾病，获取个性化健康建议',
+          path: '/pages/index/index'
+        }
+      }
+      page.onShareTimeline = function () {
+        return {
+          title: '慢病健康指导 - 智能健康评估工具',
+          query: ''
+        }
+      }
+    }
+    // 激活分享菜单
+    Taro.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    })
+  })
+
   const [diseases, setDiseases] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

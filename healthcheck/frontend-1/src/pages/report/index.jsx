@@ -1,9 +1,34 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 
 export default function Report() {
   const [report, setReport] = useState(null)
+
+  useDidShow(function () {
+    var page = Taro.getCurrentInstance().page
+    if (page) {
+      page.onShareAppMessage = function () {
+        var title = report
+          ? '我的健康评估报告：' + (report.title || '健康报告')
+          : '慢病健康指导 - 智能健康评估'
+        return {
+          title: title,
+          path: '/pages/index/index'
+        }
+      }
+      page.onShareTimeline = function () {
+        return {
+          title: '我的健康评估报告 - 慢病健康指导',
+          query: ''
+        }
+      }
+    }
+    Taro.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    })
+  })
 
   useEffect(() => {
     // 从全局读取报告数据
