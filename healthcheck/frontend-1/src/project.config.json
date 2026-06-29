@@ -1,0 +1,41 @@
+{
+    "miniprogramRoot": "./dist",
+    "projectname": "health-app-taro",
+    "description": "慢病健康指导",
+    "appid": "wxbb3bd95eb813f518",
+    "setting": {
+        "urlCheck": false,
+        "es6": true,
+        "enhance": true,
+        "compileHotReLoad": false,
+        "postcss": false,
+        "minified": false,
+        "compileWorklet": false,
+        "uglifyFileName": false,
+        "uploadWithSourceMap": true,
+        "packNpmManually": false,
+        "packNpmRelationList": [],
+        "minifyWXSS": true,
+        "minifyWXML": true,
+        "localPlugins": false,
+        "disableUseStrict": false,
+        "useCompilerPlugins": false,
+        "condition": false,
+        "swc": false,
+        "disableSWC": true,
+        "babelSetting": {
+            "ignore": [],
+            "disablePlugins": [],
+            "outputPath": ""
+        }
+    },
+    "compileType": "miniprogram",
+    "libVersion": "2.25.0",
+    "condition": {},
+    "simulatorPluginLibVersion": {},
+    "packOptions": {
+        "ignore": [],
+        "include": []
+    },
+    "editorSetting": {}
+}
