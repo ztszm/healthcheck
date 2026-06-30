@@ -73,8 +73,17 @@ export function generateReport(params) {
   return request('/api/reports', 'POST', params)
 }
 
+/**
+ * 发送对话消息（在已有报告基础上追问）
+ * @param {object} params - { message: string, disease_id: number, history: array }
+ */
+export function chatMessage(params) {
+  return request('/api/reports', 'POST', params)
+}
+
 export default {
   getDiseases,
   getSymptoms,
-  generateReport
+  generateReport,
+  chatMessage
 }

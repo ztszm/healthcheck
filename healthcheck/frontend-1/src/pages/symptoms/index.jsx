@@ -91,15 +91,21 @@ export default function Symptoms() {
       }
     })
 
-    generateReport({
+    var params = {
       disease_id: parseInt(diseaseId),
       selected_symptom_ids: chosen,
       symptom_details: symptomDetailsArray
-    }).then(function (res) {
+    }
+
+    generateReport(params).then(function (res) {
       setLoading(false)
-      // 将报告数据存储到全局，供报告页读取
+      // 将报告数据和生成参数存储到全局，供报告页读取和重新生成
       var app = Taro.getApp()
       app.reportData = res
+      app.reportParams = params
+      app.reportSymptomNames = symptoms
+        .filter(function (s) { return chosen.includes(s.id) })
+        .map(function (s) { return { id: s.id, name: s.name } })
       Taro.navigateTo({ url: '/pages/report/index' })
     }).catch(function (err) {
       Taro.showToast({ title: '生成失败: ' + (err.message || err), icon: 'none', duration: 3000 })

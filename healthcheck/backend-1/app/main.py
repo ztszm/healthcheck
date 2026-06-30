@@ -377,6 +377,67 @@ async def call_deepseek_with_kb(user_question: str, disease_name: str = "", symp
     
     return result
 
+# ==================== 多轮对话调用（追问模式） ====================
+async def call_deepseek_chat(chat_history: list, disease_name: str = "", symptoms: list = None) -> str:
+    """使用对话历史进行多轮对话"""
+    if symptoms is None:
+        symptoms = []
+
+    if not DEEPSEEK_API_KEY or DEEPSEEK_API_KEY == "sk-your-api-key-here":
+        print("⚠️ DeepSeek API Key 未配置，使用离线建议")
+        return generate_offline_advice(disease_name, symptoms, "")
+
+    # 从知识库检索相关内容
+    search_query = f"{disease_name} {' '.join(symptoms)}" if disease_name else ""
+    knowledge_context = retrieve_knowledge(search_query)
+
+    # 构建 system prompt
+    system_content = """你是一位专业的健康顾问。请基于以下信息回答用户的追问。
+
+要求：
+1. 结合之前生成的健康报告内容，针对用户的新问题给出具体指导
+2. 优先使用知识库中的专业知识
+3. 语气温和、专业、有同理心
+4. 回答要具体、可操作
+5. 如果症状严重，明确建议就医
+6. 禁止给出使用药物建议"""
+
+    if knowledge_context:
+        system_content += f"\n\n参考知识库：\n{knowledge_context}"
+
+    # 构建多轮消息
+    messages = [{"role": "system", "content": system_content}]
+    for msg in chat_history:
+        # 前端用 "ai"，DeepSeek 要求 "assistant"
+        role = "assistant" if msg.role == "ai" else msg.role
+        messages.append({"role": role, "content": msg.content})
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                DEEPSEEK_BASE_URL + "/chat/completions",
+                headers={
+                    "Authorization": "Bearer " + DEEPSEEK_API_KEY,
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "max_tokens": 2000
+                }
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+            else:
+                print(f"❌ DeepSeek API 错误: {response.status_code}")
+                return "抱歉，暂时无法回复，请稍后重试。"
+    except Exception as e:
+        print(f"❌ 调用 DeepSeek API 失败: {e}")
+        return "抱歉，网络异常，请稍后重试。"
+
 # ==================== API 路由 ====================
 @app.get("/api/diseases")
 def get_diseases():
@@ -444,10 +505,15 @@ class SymptomDetail(BaseModel):
     symptomId: int
     detail: str
 
+class ChatMessage(BaseModel):
+    role: str    # "user" 或 "ai"
+    content: str
+
 class ReportRequest(BaseModel):
     disease_id: int
     selected_symptom_ids: List[int]
     symptom_details: Optional[List[SymptomDetail]] = []
+    chat_history: Optional[List[ChatMessage]] = []   # 追问时的对话历史
 
 class KnowledgeAddRequest(BaseModel):
     text: str
@@ -455,33 +521,33 @@ class KnowledgeAddRequest(BaseModel):
     id: Optional[str] = None
 @app.post("/api/reports")
 async def generate_report(req: ReportRequest):
-    """生成健康报告"""
-    # 使用 req.xxx 访问属性（Pydantic 模型）
+    """生成健康报告（支持首次生成 + 追问对话）"""
     disease_id = req.disease_id
     symptom_ids = req.selected_symptom_ids
     symptom_details = req.symptom_details or []
-    
+    chat_history = req.chat_history or []
+
     # 获取疾病信息
     disease = next((d for d in DISEASES if d["id"] == disease_id), None)
     if not disease:
         raise HTTPException(status_code=404, detail="疾病不存在")
-    
+
     disease_name = disease["name"]
-    
+
     # 获取症状信息
     selected_symptoms = []
     for s in SYMPTOMS.get(disease_id, []):
         if s["id"] in symptom_ids:
             selected_symptoms.append(s)
-    
+
     symptom_names = [s["name"] for s in selected_symptoms]
-    
+
     if not symptom_names:
         raise HTTPException(status_code=400, detail="请至少选择一个症状")
-    
+
     # 构建症状详情映射
     detail_map = {item.symptomId: item.detail for item in symptom_details}
-    
+
     # 构建包含详情的症状文本
     symptom_texts = []
     for s in selected_symptoms:
@@ -489,34 +555,56 @@ async def generate_report(req: ReportRequest):
         if s["id"] in detail_map and detail_map[s["id"]].strip():
             text += "（" + detail_map[s["id"]] + "）"
         symptom_texts.append(text)
-    
-    # 构建用户问题
-    user_question = f"我患有{disease_name}，症状包括：{', '.join(symptom_texts)}。请给我健康指导。"
-    
-    # 调用 RAG 增强的 DeepSeek
-    advice = await call_deepseek_with_kb(
-        user_question=user_question,
-        disease_name=disease_name,
-        symptoms=symptom_names
-    )
-    
-    # 构建完整报告
-    content = "疾病：" + disease_name + "\n\n"
-    content += "选择的症状：" + ", ".join(symptom_texts) + "\n\n"
-    content += "=" * 40 + "\n\n"
-    content += advice + "\n\n"
-    content += "【注意】 本报告仅供参考，不构成医疗建议。"
-    return {
-        "report_id": uuid.uuid4().hex[:8],
-        "title": "健康评估报告 - " + disease_name,
-        "disease": disease_name,
-        "symptoms": symptom_names,
-        "symptom_details": [{"symptomId": k, "detail": v} for k, v in detail_map.items()],
-        "content": content,
-        "advice": advice,
-        "created_at": datetime.now().isoformat(),
-        "rag_used": RAG_AVAILABLE
-    }
+
+    # ========== 判断是首次生成还是追问 ==========
+    is_followup = len(chat_history) > 0
+
+    if is_followup:
+        # --- 追问模式：将对话历史传给 DeepSeek 做多轮对话 ---
+        advice = await call_deepseek_chat(
+            chat_history=chat_history,
+            disease_name=disease_name,
+            symptoms=symptom_names
+        )
+        # 追问模式只返回 AI 回复内容
+        return {
+            "report_id": uuid.uuid4().hex[:8],
+            "title": "健康评估报告 - " + disease_name,
+            "disease": disease_name,
+            "symptoms": symptom_names,
+            "symptom_details": [{"symptomId": k, "detail": v} for k, v in detail_map.items()],
+            "content": advice,
+            "advice": advice,
+            "created_at": datetime.now().isoformat(),
+            "rag_used": RAG_AVAILABLE
+        }
+    else:
+        # --- 首次报告模式 ---
+        user_question = f"我患有{disease_name}，症状包括：{', '.join(symptom_texts)}。请给我健康指导。"
+
+        advice = await call_deepseek_with_kb(
+            user_question=user_question,
+            disease_name=disease_name,
+            symptoms=symptom_names
+        )
+
+        content = "疾病：" + disease_name + "\n\n"
+        content += "选择的症状：" + ", ".join(symptom_texts) + "\n\n"
+        content += "=" * 40 + "\n\n"
+        content += advice + "\n\n"
+        content += "【注意】 本报告仅供参考，不构成医疗建议。"
+
+        return {
+            "report_id": uuid.uuid4().hex[:8],
+            "title": "健康评估报告 - " + disease_name,
+            "disease": disease_name,
+            "symptoms": symptom_names,
+            "symptom_details": [{"symptomId": k, "detail": v} for k, v in detail_map.items()],
+            "content": content,
+            "advice": advice,
+            "created_at": datetime.now().isoformat(),
+            "rag_used": RAG_AVAILABLE
+        }
 @app.get("/")
 @app.get("/api/health")
 def health_check():

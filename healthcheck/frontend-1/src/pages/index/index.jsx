@@ -31,39 +31,15 @@ export default function Index() {
   const [error, setError] = useState(null)
 
   useEffect(function () {
-    async function fetchData() {
-      try {
-        const res = await wx.cloud.callContainer({
-            config: {
-              env: "cloud1-d1g1vvlxna9e01dc4" // 与小程序已关联的云开发环境 ID
-            },
-            path: "/api/diseases", // 业务自定义路径，根目录为 /
-            method: "GET", // 依业务选择
-            header: {
-              "X-WX-SERVICE": "health-backend" // 云托管服务名称
-              // 其他 header
-            }
-        })
-        console.log('当前请求头:', {
-            'X-WX-SERVICE': 'health-backend'
-          });
-        if (res.statusCode === 200) {
-          setDiseases(res.data)
-          setLoading(false)
-        } else {
-          setError('HTTP ' + res.statusCode)
-          setLoading(false)
-        }
-      } catch (err) {
+    getDiseases().then(function (res) {
+        setDiseases(res.data)
+        setLoading(false)
+      }).catch(function (err) {
         setError('网络失败: ' + (err.errMsg || JSON.stringify(err)))
         setLoading(false)
-      }
-    }
-    fetchData()
-    console.log('当前请求头:', {
-        'X-WX-SERVICE': 'health-backend'
-    });
-  }, [])
+      })
+    }, [diseaseId])
+ 
 
   function selectDisease(d) {
     Taro.navigateTo({

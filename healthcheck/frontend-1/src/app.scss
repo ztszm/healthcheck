@@ -307,4 +307,271 @@ page {
   font-size: 28rpx;
 }
 
+/* ========== 聊天页面 ========== */
+/* 紧凑头部 */
+.chat-header {
+  background: linear-gradient(135deg, #4A90D9, #67B7E8);
+  padding: 24rpx 32rpx;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
 
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.chat-back {
+  font-size: 32rpx;
+  opacity: 0.85;
+  padding-right: 16rpx;
+  border-right: 2rpx solid rgba(255,255,255,0.3);
+}
+
+.chat-header-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  max-width: 360rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-header-tags {
+  font-size: 22rpx;
+  opacity: 0.7;
+  background: rgba(255,255,255,0.15);
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+/* 聊天消息区域 */
+.chat-body {
+  flex: 1;
+  background: #EDF1F5;
+}
+
+.chat-messages {
+  padding: 24rpx 24rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+/* 聊天气泡行 */
+.chat-bubble-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  max-width: 100%;
+}
+
+.chat-bubble-row.ai-row {
+  flex-direction: row;
+}
+
+.chat-bubble-row.user-row {
+  flex-direction: row-reverse;
+}
+
+/* 头像 */
+.chat-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  font-size: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.ai-avatar {
+  background: #e8f4fd;
+}
+
+.user-avatar {
+  background: #E8ECF0;
+}
+
+/* 气泡包裹器 */
+.chat-bubble-wrapper {
+  max-width: calc(100% - 88rpx);
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-wrapper {
+  align-items: flex-start;
+}
+
+.user-wrapper {
+  align-items: flex-end;
+}
+
+/* 气泡 */
+.chat-bubble {
+  padding: 20rpx 28rpx;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.ai-bubble {
+  background: #fff;
+  color: #2C3E50;
+  border-bottom-left-radius: 6rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.user-bubble {
+  background: #4A90D9;
+  color: #fff;
+  border-bottom-right-radius: 6rpx;
+}
+
+.chat-bubble-text {
+  display: block;
+}
+
+/* 时间 */
+.chat-time {
+  font-size: 22rpx;
+  color: #bdc3c7;
+  margin-top: 8rpx;
+  padding: 0 8rpx;
+}
+
+/* 报告卡片气泡 */
+.report-bubble {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx 36rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+  border-left: 6rpx solid #4A90D9;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.report-bubble-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2C3E50;
+  margin-bottom: 20rpx;
+}
+
+.report-bubble-divider {
+  height: 2rpx;
+  background: #E8ECF0;
+  margin-bottom: 20rpx;
+}
+
+.report-bubble-dash {
+  border-top: 2rpx dashed #E8ECF0;
+  margin: 16rpx 0;
+}
+
+.report-bubble-h3 {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #4A90D9;
+  display: block;
+  margin: 20rpx 0 8rpx;
+  padding-left: 16rpx;
+  border-left: 4rpx solid #4A90D9;
+}
+
+.report-bubble-line {
+  font-size: 28rpx;
+  line-height: 1.8;
+  color: #3A4A5A;
+  display: block;
+  margin: 4rpx 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.report-bubble-line.warn {
+  color: #e74c3c;
+  font-weight: 500;
+  margin-top: 16rpx;
+}
+
+/* 正在输入动画 */
+.chat-bubble.typing {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 24rpx 32rpx;
+}
+
+.typing-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #bdc3c7;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* 底部输入栏 */
+.chat-input-bar {
+  background: #fff;
+  padding: 16rpx 24rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid #eee;
+  flex-shrink: 0;
+}
+
+.chat-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.chat-input {
+  flex: 1;
+  height: 76rpx;
+  padding: 0 28rpx;
+  background: #F5F7FA;
+  border-radius: 38rpx;
+  font-size: 28rpx;
+  color: #2C3E50;
+}
+
+.chat-send-btn {
+  flex-shrink: 0;
+  width: 120rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: #e8ecf0;
+  color: #bdc3c7;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.chat-send-btn.active {
+  background: #4A90D9;
+  color: #fff;
+}
+
+/* ========== 报告卡片（兼容旧样式，聊天模式不再使用但仍保留） ========== */
