@@ -566,7 +566,6 @@ async def generate_report(req: ReportRequest):
             disease_name=disease_name,
             symptoms=symptom_names
         )
-        # 追问模式只返回 AI 回复内容
         return {
             "report_id": uuid.uuid4().hex[:8],
             "title": "健康评估报告 - " + disease_name,
@@ -578,33 +577,33 @@ async def generate_report(req: ReportRequest):
             "created_at": datetime.now().isoformat(),
             "rag_used": RAG_AVAILABLE
         }
-    else:
-        # --- 首次报告模式 ---
-        user_question = f"我患有{disease_name}，症状包括：{', '.join(symptom_texts)}。请给我健康指导。"
 
-        advice = await call_deepseek_with_kb(
-            user_question=user_question,
-            disease_name=disease_name,
-            symptoms=symptom_names
-        )
+    # --- 首次报告模式 ---
+    user_question = f"我患有{disease_name}，症状包括：{', '.join(symptom_texts)}。请给我健康指导。"
 
-        content = "疾病：" + disease_name + "\n\n"
-        content += "选择的症状：" + ", ".join(symptom_texts) + "\n\n"
-        content += "=" * 40 + "\n\n"
-        content += advice + "\n\n"
-        content += "【注意】 本报告仅供参考，不构成医疗建议。"
+    advice = await call_deepseek_with_kb(
+        user_question=user_question,
+        disease_name=disease_name,
+        symptoms=symptom_names
+    )
 
-        return {
-            "report_id": uuid.uuid4().hex[:8],
-            "title": "健康评估报告 - " + disease_name,
-            "disease": disease_name,
-            "symptoms": symptom_names,
-            "symptom_details": [{"symptomId": k, "detail": v} for k, v in detail_map.items()],
-            "content": content,
-            "advice": advice,
-            "created_at": datetime.now().isoformat(),
-            "rag_used": RAG_AVAILABLE
-        }
+    content = "疾病：" + disease_name + "\n\n"
+    content += "选择的症状：" + ", ".join(symptom_texts) + "\n\n"
+    content += "=" * 40 + "\n\n"
+    content += advice + "\n\n"
+    content += "【注意】 本报告仅供参考，不构成医疗建议。"
+
+    return {
+        "report_id": uuid.uuid4().hex[:8],
+        "title": "健康评估报告 - " + disease_name,
+        "disease": disease_name,
+        "symptoms": symptom_names,
+        "symptom_details": [{"symptomId": k, "detail": v} for k, v in detail_map.items()],
+        "content": content,
+        "advice": advice,
+        "created_at": datetime.now().isoformat(),
+        "rag_used": RAG_AVAILABLE
+    }
 @app.get("/")
 @app.get("/api/health")
 def health_check():
