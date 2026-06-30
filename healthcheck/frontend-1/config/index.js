@@ -77,7 +77,13 @@ const config = {
 }
 
 module.exports = function (merge) {
-  if (process.env.NODE_ENV === 'development') {
+  // --watch 模式下也视为开发环境，使用 dev 配置
+  var isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--watch')
+
+  // 直接注入 API_MODE 常量，避免 merge 不生效
+  config.defineConstants.__API_MODE__ = JSON.stringify(isDev ? 'local' : 'cloud')
+
+  if (isDev) {
     return merge({}, config, require('./dev'))
   }
   return merge({}, config, require('./prod'))

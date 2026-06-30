@@ -1,48 +1,76 @@
-// ========== 通用微信云托管 callContainer 请求 ==========
-function callContainer(path, method, data) {
-  return new Promise((resolve, reject) => {
-    wx.cloud.callContainer({
-      config: { env: 'cloud1-d1g1vvlxna9e01dc4' },
-      path: path,
+import Taro from '@tarojs/taro'
+
+// ========== 本地开发 VS 云托管切换 ==========
+// 由构建命令自动决定：npm run dev:weapp → localhost，npm run build:weapp → 云托管
+var API_MODE = __API_MODE__
+
+// 本地后端地址（根据实际情况修改端口）
+var LOCAL_BASE = 'http://localhost:8080'
+
+// 云托管配置
+var CLOUD_ENV = 'cloud1-d1g1vvlxna9e01dc4'
+var CLOUD_SERVICE = 'health-backend'
+
+function request(path, method, data) {
+  if (API_MODE === 'local') {
+    // 本地开发：直接用 Taro.request
+    return Taro.request({
+      url: LOCAL_BASE + path,
       method: method,
-      header: {
-        'X-WX-SERVICE': 'health-backend',
-        'Content-Type': 'application/json'
-      },
       data: data,
-      success(res) {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(res.data)
-        } else {
-          reject(new Error('HTTP ' + res.statusCode))
-        }
-      },
-      fail(err) {
-        reject(new Error(err.errMsg || '网络错误'))
+      header: { 'Content-Type': 'application/json' }
+    }).then(function (res) {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        return res.data
       }
+      throw new Error('HTTP ' + res.statusCode)
     })
-  })
+  } else {
+    // 云托管：用 callContainer
+    return new Promise(function (resolve, reject) {
+      wx.cloud.callContainer({
+        config: { env: CLOUD_ENV },
+        path: path,
+        method: method,
+        header: {
+          'X-WX-SERVICE': CLOUD_SERVICE,
+          'Content-Type': 'application/json'
+        },
+        data: data,
+        success: function (res) {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(res.data)
+          } else {
+            reject(new Error('HTTP ' + res.statusCode))
+          }
+        },
+        fail: function (err) {
+          reject(new Error(err.errMsg || '网络错误'))
+        }
+      })
+    })
+  }
 }
 
 /**
  * 获取所有疾病列表
  */
 export function getDiseases() {
-  return callContainer('/api/diseases', 'GET')
+  return request('/api/diseases', 'GET')
 }
 
 /**
  * 获取指定疾病的症状列表
  */
 export function getSymptoms(diseaseId) {
-  return callContainer('/api/diseases/' + diseaseId + '/symptoms', 'GET')
+  return request('/api/diseases/' + diseaseId + '/symptoms', 'GET')
 }
 
 /**
  * 生成健康报告
  */
 export function generateReport(params) {
-  return callContainer('/api/reports', 'POST', params)
+  return request('/api/reports', 'POST', params)
 }
 
 export default {
